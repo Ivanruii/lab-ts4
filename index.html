@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juego de Cartas</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Juego de Cartas</h1>
+        <div class="message" id="message"></div>
+        <div class="game-container" id="only-on-game">
+            <div class="score" id="score"></div>
+            <img class="card-img" id="card-img" src="https://raw.githubusercontent.com/Lemoncode/fotos-ejemplos/main/cartas/back.jpg" alt="Carta">
+            <div class="card" id="card"></div>
+            <div class="remaining-cards" id="remaining-cards"></div>
+            <div class="button-container">
+                <button class="button" id="pick-card-button">Coger Carta</button>
+                <button class="button" id="stay-button">Plantarse</button>
+            </div>
+        </div>
+        <div id="only-when-game-ended" style="display: none;">
+            <button class="button" id="new-game-button">Nueva Partida</button>
+        </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
