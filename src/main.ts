@@ -156,12 +156,8 @@ function resetGame() {
     roundScore = 0;
 }
 
-function giveRandomCard(cardsInPiles: number): Card | undefined {
-    if (cardsInPiles <= minOfCards) {
-        return undefined;
-    }
-
-    const randomIndex = Math.floor(Math.random() * cardsInPiles);
+function giveRandomCard(): Card {
+    const randomIndex = Math.floor(Math.random() * cardsOfDeck.length);
     const pickedCard = cardsOfDeck[randomIndex];
 
     cardsInPiles -= 1;
@@ -170,8 +166,9 @@ function giveRandomCard(cardsInPiles: number): Card | undefined {
 
 // Game actions
 
-async function pickCardButton() {
-    const pickedCard = giveRandomCard(cardsInPiles);
+function pickCardButton() {
+    const pickedCard = giveRandomCard();
+    
     if (pickedCard) {
         updateGame(pickedCard);
         updateUI(pickedCard);
@@ -180,7 +177,7 @@ async function pickCardButton() {
 }
 
 function stayButton() {
-    const pickedCard = giveRandomCard(cardsInPiles);
+    const pickedCard = giveRandomCard();
     roundScore = 0;
 
     if (pickedCard) {
