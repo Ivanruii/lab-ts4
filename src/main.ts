@@ -1,14 +1,43 @@
 import './style.css';
 
+// Constants
+
+const scoreToWin: number = 7.5;
+const minOfCards: number = 0;
+
+// Global variables
+
 let cardsInPiles: number = 40;
 let roundScore: number = 0;
 let totalGameScore: number = 0;
 
+// Interfaces
+
 interface Card {
     name: string;
     value: number;
-    url: string
+    url: string;
 }
+
+interface ElementWithInnerText {
+    innerText: string;
+}
+
+// DOM elements
+
+const elements = {
+    onlyOnGameContainer: getElementOrThrow<HTMLDivElement>('only-on-game'),
+    onlyWhenGameEnded: getElementOrThrow<HTMLDivElement>('only-when-game-ended'),
+    score: getElementOrThrow<HTMLSpanElement>('score'),
+    remainingCards: getElementOrThrow<HTMLSpanElement>('remaining-cards'),
+    card: getElementOrThrow<HTMLDivElement>('card'),
+    pickCardButton: getElementOrThrow<HTMLButtonElement>('pick-card-button'),
+    stayButton: getElementOrThrow<HTMLButtonElement>('stay-button'),
+    message: getElementOrThrow<HTMLDivElement>('message'),
+    newGameButton: getElementOrThrow<HTMLButtonElement>('new-game-button'),
+};
+
+// Game elements
 
 const cardsOfDeck: Card[] = [
     { name: "1 Copas", value: 1, url: "https://raw.githubusercontent.com/Lemoncode/fotos-ejemplos/main/cartas/copas/1_as-copas.jpg" },
@@ -23,40 +52,38 @@ const cardsOfDeck: Card[] = [
     { name: "Rey de copas", value: 0.5, url: "https://raw.githubusercontent.com/Lemoncode/fotos-ejemplos/main/cartas/copas/12_rey-copas.jpg" }
 ];
 
-function initializeElements() {
-    const elements = {
-        onlyOnGameContainer: getElementOrThrow('only-on-game'),
-        onlyWhenGameEnded: getElementOrThrow('only-when-game-ended'),
-        score: getElementOrThrow('score'),
-        remainingCards: getElementOrThrow('remaining-cards'),
-        card: getElementOrThrow('card'),
-        pickCardButton: getElementOrThrow('pick-card-button'),
-        stayButton: getElementOrThrow('stay-button'),
-        message: getElementOrThrow('message'),
-        newGameButton: getElementOrThrow('new-game-button'),
-    };
+// Initialization
 
-    return elements;
+window.addEventListener("DOMContentLoaded", () => {
+    startGame();
+});
+
+function initializeElements() {
+    return {
+        ...elements
+    };
 }
 
-function getElementOrThrow(id: string): HTMLElement {
-    const element = document.getElementById(id);
+// Utility functions
+
+function getElementOrThrow<Type>(id: string): Type {
+    const element = document.getElementById(id) as Type;
     if (!element) {
         throw new Error(`Element with id "${id}" not found.`);
     }
     return element;
 }
 
-function setMessageText(elementId: string, text: string | number, resetTime?: number): void {
+function setMessageText<Type extends ElementWithInnerText>(elementId: string, text: string, resetTime?: number): void {
     const element = getElementOrThrow(elementId);
 
     if (element) {
-        element.innerText = String(text);
+        (element as Type).innerText = String(text);
     }
 
     if (resetTime) {
         setTimeout(() => {
-            element.innerText = '';
+            (element as Type).innerText = '';
         }, resetTime);
     }
 }
@@ -70,78 +97,29 @@ function changeImage(imgId: string, newSrc: string): void {
     }
 }
 
-function giveRandomCard(cardsInPiles: number): Card | undefined {
-    if (cardsInPiles <= 0) {
-        return undefined;
-    }
+// Update functions
 
-    const randomIndex = Math.floor(Math.random() * cardsInPiles);
-    const pickedCard = cardsOfDeck[randomIndex];
-
+function updateGame(pickedCard: Card) {
     cardsInPiles -= 1;
-    return pickedCard;
-}
-
-function stayButton() {
-    const pickedCard = giveRandomCard(cardsInPiles);
-    roundScore = 0;
-
-    if (pickedCard) {
-        setMessageText("message", `Has decidido plantarte. Si hubieras cogido una carta, te hubiera tocado: ${pickedCard.value}`);
+    roundScore += pickedCard.value;
+    totalGameScore += pickedCard.value;
+    if (roundScore > scoreToWin) {
+        gameOver();
+    } else {
+        gameWinned();
     }
 }
 
-function gameOver() {
-    const elements = initializeElements();
-    elements.onlyOnGameContainer.style.display = "none",
-        elements.onlyWhenGameEnded.style.display = "block",
-        cardsInPiles = 40;
-    roundScore = 0;
-    setMessageText("message", `Has perdido la partida.`);
-}
-
-function pickCardButton() {
-    const pickedCard = giveRandomCard(cardsInPiles);
-    if (pickedCard) {
-        cardsInPiles -= 1;
-        roundScore += pickedCard.value;
-        totalGameScore += pickedCard.value;
-        if (roundScore > 7.5) {
-            gameOver();
-            changeImage("card-img", pickedCard.url)
-            setMessageText("card", roundScore);
-        } else {
-            gameWinned();
-            changeImage("card-img", pickedCard.url)
-            setMessageText("card", roundScore);
-        }
-    }
-    updateElements()
-}
-
-function newGameButton() {
-    const elements = initializeElements();
-    elements.onlyOnGameContainer.style.display = "block",
-        elements.onlyWhenGameEnded.style.display = "none"
-    setMessageText("message", `Has empezado una nueva partida.`);
-}
-
-function gameWinned() {
-    const elements = initializeElements();
-    if (roundScore === 7.5) {
-        setMessageText("message", `Has ganado la partida.`);
-        elements.onlyWhenGameEnded.style.display = "block"
-    } else if (cardsInPiles === 0) {
-        setMessageText("message", `Te has quedado sin cartas, has ganado la partida con una puntuación de ${totalGameScore}.`);
-        elements.onlyWhenGameEnded.style.display = "block"
-    }
+function updateUI(pickedCard: Card) {
+    changeImage("card-img", pickedCard.url);
+    setMessageText<HTMLDivElement>("card", String(roundScore));
 }
 
 function updateElements() {
-    const elements = initializeElements();
-
-    elements.remainingCards.innerHTML = `Cartas restantes: ${String(cardsInPiles)}`;
+    setMessageText<HTMLDivElement>("remaining-cards", `Cartas restantes: ${String(cardsInPiles)}`);
 }
+
+// Game functions
 
 function startGame() {
     const elements = initializeElements();
@@ -153,4 +131,66 @@ function startGame() {
     elements.newGameButton.onclick = newGameButton;
 }
 
-startGame();
+function gameWinned() {
+    const elements = initializeElements();
+    if (roundScore === scoreToWin) {
+        setMessageText<HTMLDivElement>("message", `Has ganado la partida.`);
+        elements.onlyWhenGameEnded.style.display = "block"
+    } else if (cardsInPiles === minOfCards) {
+        setMessageText<HTMLDivElement>("message", `Te has quedado sin cartas, has ganado la partida con una puntuación de ${totalGameScore}.`);
+        elements.onlyWhenGameEnded.style.display = "block"
+    }
+}
+
+function gameOver() {
+    setMessageText<HTMLDivElement>("message", `Has perdido la partida.`);
+    resetGame()
+}
+
+function resetGame() {
+    const elements = initializeElements();
+    changeImage("card-img", "https://raw.githubusercontent.com/Lemoncode/fotos-ejemplos/main/cartas/back.jpg");
+    elements.onlyOnGameContainer.style.display = "none",
+    elements.onlyWhenGameEnded.style.display = "block",
+    cardsInPiles = 40;
+    roundScore = 0;
+}
+
+function giveRandomCard(cardsInPiles: number): Card | undefined {
+    if (cardsInPiles <= minOfCards) {
+        return undefined;
+    }
+
+    const randomIndex = Math.floor(Math.random() * cardsInPiles);
+    const pickedCard = cardsOfDeck[randomIndex];
+
+    cardsInPiles -= 1;
+    return pickedCard;
+}
+
+// Game actions
+
+async function pickCardButton() {
+    const pickedCard = giveRandomCard(cardsInPiles);
+    if (pickedCard) {
+        updateGame(pickedCard);
+        updateUI(pickedCard);
+        updateElements();
+    }
+}
+
+function stayButton() {
+    const pickedCard = giveRandomCard(cardsInPiles);
+    roundScore = 0;
+
+    if (pickedCard) {
+        setMessageText<HTMLDivElement>("message", `Has decidido plantarte. Si hubieras cogido una carta, te hubiera tocado: ${pickedCard.value}`);
+    }
+}
+
+function newGameButton() {
+    const elements = initializeElements();
+    elements.onlyOnGameContainer.style.display = "block",
+        elements.onlyWhenGameEnded.style.display = "none"
+    setMessageText<HTMLDivElement>("message", `Has empezado una nueva partida.`);
+}
